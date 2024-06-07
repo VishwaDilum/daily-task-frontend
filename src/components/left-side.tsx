@@ -11,7 +11,6 @@ import InputLabel from '@mui/material/InputLabel';
 import FormControl from '@mui/material/FormControl';
 import NativeSelect from '@mui/material/NativeSelect';
 import TextField from '@mui/material/TextField';
-import reactIcon from "../assets/react.svg";
 import './left-side.css';
 import Autocomplete from '@mui/material/Autocomplete';
 import Icon01 from '../assets/redcircle.png'

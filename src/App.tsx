@@ -2,16 +2,20 @@ import React from 'react'; // Import React if you're using JSX
 import './App.css';
 import Side from "../src/components/left-side"; // Assuming Side is the default export from left-side
 import {} from 'bootstrap/dist/css/bootstrap.min.css'
+import { Login } from '@mui/icons-material';
+import SignUp from './components/signup';
+import SignIn from './components/signin';
+import Pass from './components/forgotpass';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 function App() {
   return (
-    <div className='container'>
-      <div className='row'>
-        <div className='col-3'><Side></Side></div>
-        <div className='col-3'></div>
-        <div className='col-3'></div>
-        <div className='col-3'></div>
-      </div>
-    </div>
+    <BrowserRouter>
+      <Routes>
+          <Route path='/signin' element ={<SignIn></SignIn>}></Route>
+          <Route path='/signup' element ={<SignUp></SignUp>}></Route>
+          <Route path='/forgotpassword' element ={<Pass></Pass>}></Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 
