@@ -17,6 +17,7 @@ import Icon01 from '../assets/redcircle.png'
 import Icon02 from '../assets/greencircle.png'
 import Icon03 from '../assets/yellowcircle.png'
 import Button from '@mui/material/Button';
+import {} from '../cascade/left-side.css';
 
 // JS SECTION
 function LeftSide() {

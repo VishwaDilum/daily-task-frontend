@@ -12,32 +12,43 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { useState } from 'react';
 
-function Copyright(props: any) {
-  return (
-    <Typography variant="body2" color="text.secondary" align="center" {...props}>
-      {'Copyright © '}
-      <Link color="inherit" href="https://mui.com/">
-        Your Website
-      </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  );
-}
-
-// TODO remove, this demo shouldn't need to reset the theme.
 const defaultTheme = createTheme();
 
-export default function SignIn() {
+function SignIn() {
+  const [inputEmail, setInputEmail] = useState("");
+  const [inputPass, setInputPass] = useState("");
+  const [tickBox, setTickBox] = useState(false);
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     console.log({
-      email: data.get('email'),
+      email: data.get("email"),
       password: data.get('password'),
     });
+    signInOnAction(); // Call the function here to clear the checkbox on form submission
   };
+
+  function Copyright(props: any) {
+    return (
+      <Typography variant="body2" color="text.secondary" align="center" {...props}>
+        {'Copyright © '}
+        <Link color="inherit" href="https://mui.com/">
+          Your Website
+        </Link>{' '}
+        {new Date().getFullYear()}
+        {'.'}
+      </Typography>
+    );
+  }
+
+  function signInOnAction() {
+    setInputEmail("");
+    setInputPass("");
+    setTickBox(false); // Reset the checkbox
+  }
 
   return (
     <ThemeProvider theme={defaultTheme}>
@@ -67,6 +78,8 @@ export default function SignIn() {
               name="email"
               autoComplete="email"
               autoFocus
+              value={inputEmail}
+              onChange={(e) => setInputEmail(e.target.value)}
             />
             <TextField
               margin="normal"
@@ -77,9 +90,17 @@ export default function SignIn() {
               type="password"
               id="password"
               autoComplete="current-password"
+              value={inputPass}
+              onChange={(e) => setInputPass(e.target.value)}
             />
             <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
+              control={
+                <Checkbox
+                  checked={tickBox}
+                  onChange={(e) => setTickBox(e.target.checked)}
+                  color="primary"
+                />
+              }
               label="Remember me"
             />
             <Button
@@ -109,3 +130,5 @@ export default function SignIn() {
     </ThemeProvider>
   );
 }
+
+export default SignIn;
