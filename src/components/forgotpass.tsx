@@ -12,6 +12,9 @@ function forgotpassword() {
     const history = useNavigate();
 
     const handleSendOTP = async   ()=>{
+        if(emailValue == "" || emailValue == undefined || emailValue == null ){
+            return;
+        }
         setDisable(true)
         const response = await fetch('http://localhost:5000/send-otp', {
             method: 'POST',
