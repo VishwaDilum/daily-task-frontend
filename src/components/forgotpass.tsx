@@ -4,30 +4,41 @@ import homeIcon from '../assets/home.png'
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { Send } from '@mui/icons-material';
 function forgotpassword() {
 
     const [count, setCount] = useState<number>(10);
     const [isDisable, setDisable] = useState<boolean>(false);
     const [emailValue, setEmailValue] = useState<string>("");
+    const [otpValue, setOtpValue] = useState<string>("");
+    const [newPass, setNewPass] = useState<boolean>(false);
+    const [newInputPass01, setNewPass01] = useState<string>("");
+    const [newInputPass02, setNewPass02] = useState<string>("");
+    const [showPassword, setShowPassword] = useState(true);
+    const [typeOfInput, setTypeOfInput] = useState();
     const history = useNavigate();
 
-    const handleSendOTP = async   ()=>{
-        if(emailValue == "" || emailValue == undefined || emailValue == null ){
+
+    const handleSendOTP = async () => {
+        if (emailValue === "" || emailValue === undefined || emailValue === null) {
             return;
         }
-        setDisable(true)
+        setDisable(true);
+
         const response = await fetch('http://localhost:5000/send-otp', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ email: emailValue })  // Pass the email value
+            body: JSON.stringify({ email: emailValue })
         });
 
         if (response.ok) {
-            alert('OTP sent successfully!');
+            const data = await response.json();
+            console.log(data); // Handle successful response
         } else {
             alert('Error sending OTP');
+            setDisable(false); // Reset disable state if sending OTP fails
         }
 
     };
@@ -36,8 +47,26 @@ function forgotpassword() {
         history('/signin');
     }
 
-    function disable() {
+    const confirmOtp = async () => {
+        if (otpValue == "" || otpValue == undefined || otpValue == null) {
+            return;
+        }
+        // setDisable(true)
+        const response = await fetch('http://localhost:5000/confirm-otp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ otp: otpValue })  // Pass the email value
+        });
 
+        if (response.ok) {
+            alert("Password Confirmed")
+            setNewPass(false)
+
+        } else {
+            alert('Error sending OTP');
+        }
     }
 
     useEffect(() => {
@@ -46,15 +75,43 @@ function forgotpassword() {
                 setCount(prevCount => {
                     if (prevCount <= 1) {
                         clearInterval(intervalId);
-                        setDisable(false)
+                        setDisable(false);
                         return 10; // Reset count to 10
                     }
                     return prevCount - 1;
                 });
             }, 1000);
-            console.log("Hee " + intervalId)
+            console.log("Countdown interval started");
         }
-    }, [isDisable]); // Add isSending to dependency array
+    }, [isDisable]); // Dependency array for useEffect
+
+
+
+    function resetPass() {
+        if (newInputPass01 === newInputPass02) {
+            console.log("Password Matched")
+            return;
+        }
+        console.log("Password Not Matched");
+        // Clear input fields
+        setNewPass01("");
+        setNewPass02("");
+        // Alert the user
+        alert("Password Not Matched");
+    }
+
+    const handleTypeOfInput = () => {
+        if(showPassword){
+            return "password";
+        }
+        return "text";
+    };
+    
+
+    const handleTogglePassword = () => {
+        setShowPassword(!showPassword);
+    };
+
 
     return (
 
@@ -84,7 +141,7 @@ function forgotpassword() {
                                     </button>
                                 </div>
                                 <div className='col-4'>
-                                    <input type="email" className="form-control rounded-3" id="floatingInput" placeholder="Enter OTP"></input>
+                                    <input type="number" className="form-control rounded-3" id="floatingInput" placeholder="Enter OTP" value={otpValue} onChange={(e) => setOtpValue(e.target.value)} ></input>
                                 </div>
                                 <div className='col-4'>
 
@@ -98,24 +155,35 @@ function forgotpassword() {
 
                                 </div>
                                 <div className='col-4' id='confirmBtn'>
-                                    <button type="button" className="btn btn-primary">Confirm</button>
+                                    <button type="button" className="btn btn-primary" onClick={confirmOtp}>Confirm</button>
                                 </div>
                             </div>
 
 
                             <div className="form-floating mb-3">
-                                <input type="email" className="form-control rounded-3" id="floatingInput" placeholder="name@example.com" disabled></input>
+                                <input type={handleTypeOfInput()} className="form-control rounded-3" id="floatingInput" placeholder="name@example.com" disabled={newPass} value={newInputPass01} onChange={(e) => setNewPass01(e.target.value)} ></input>
                                 <label htmlFor="floatingInput">Enter Password</label>
                             </div>
 
                             <div className="form-floating mb-3">
-                                <input type="email" className="form-control rounded-3" id="floatingInput" placeholder="name@example.com" disabled></input>
+                                <input type={handleTypeOfInput()}className="form-control rounded-3" id="floatingInput" placeholder="name@example.com" disabled={newPass} value={newInputPass02} onChange={(e) => setNewPass02(e.target.value)} ></input>
                                 <label htmlFor="floatingInput">Re-Enter</label>
                             </div>
 
-                            <div className='col-5'>
-                                <button type="button" className="btn btn-outline-primary" disabled>Reset Password</button>
+                            <div className="form-check">
+                                <input className="form-check-input" type="checkbox" value="" id="flexCheckDefault"onClick={handleTogglePassword}></input>
+                                <label className="form-check-label" htmlFor="flexCheckDefault">
+                                    {showPassword ? `Show Passowrd` : "Hide Passoword"}
+                                </label>
                             </div>
+
+                            <div className='col-5'>
+                                <p hidden={newInputPass01 === newInputPass02} className='missMtachPass'>
+                                    Passwords do not match
+                                </p>
+                                <button type="button" className="btn btn-outline-primary" disabled={newPass} onClick={resetPass} >Reset Password </button>
+                            </div>
+
 
                             <hr className="my-4"></hr>
                         </form>

@@ -12,6 +12,7 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { useState } from 'react';
 
 function Copyright(props: any) {
   return (
@@ -27,9 +28,18 @@ function Copyright(props: any) {
 }
 
 // TODO remove, this demo shouldn't need to reset the theme.
-const defaultTheme = createTheme();
 
-export default function SignUp() {
+
+
+function SignUp() {
+  const defaultTheme = createTheme();
+  const [showPassword, setShowPassword] = useState(true);
+
+  const [firstNameValue, setFirstName] = useState<string>("");
+  const [lastNameValue, setLastName] = useState<string>("");
+  const [emailValue, setEmail] = useState<string>("");
+  const [passValue, setPass] = useState<string>("");
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -38,6 +48,33 @@ export default function SignUp() {
       password: data.get('password'),
     });
   };
+
+  const handleTypeOfInput = () => {
+    if (showPassword) {
+      return "password";
+    }
+    return "text";
+  };
+
+
+  const handleTogglePassword = () => {
+    setShowPassword(!showPassword);
+  };
+
+  function signUpTrigger(){
+    fetch('http://localhost:5000/sign-up',{
+      method :'POST',
+      headers : {
+        'Content-Type': 'application/json'
+      },
+      body : JSON.stringify({ 
+        email: emailValue,
+        password : passValue,
+        firstName : firstNameValue,
+        lastName : lastNameValue
+      })
+    })
+  }
 
   return (
     <ThemeProvider theme={defaultTheme}>
@@ -68,6 +105,8 @@ export default function SignUp() {
                   id="firstName"
                   label="First Name"
                   autoFocus
+                  value={firstNameValue}
+                  onChange={(e)=> setFirstName(e.target.value)}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -78,6 +117,8 @@ export default function SignUp() {
                   label="Last Name"
                   name="lastName"
                   autoComplete="family-name"
+                  value={lastNameValue}
+                  onChange={(e)=> setLastName(e.target.value)}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -88,6 +129,8 @@ export default function SignUp() {
                   label="Email Address"
                   name="email"
                   autoComplete="email"
+                  value={emailValue}
+                  onChange={(e)=> setEmail(e.target.value)}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -96,9 +139,11 @@ export default function SignUp() {
                   fullWidth
                   name="password"
                   label="Password"
-                  type="password"
+                  type={handleTypeOfInput()}
                   id="password"
                   autoComplete="new-password"
+                  value={passValue}
+                  onChange={(e)=> setPass(e.target.value)}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -107,12 +152,19 @@ export default function SignUp() {
                   label="I want to receive inspiration, marketing promotions and updates via email."
                 />
               </Grid>
+              <Grid item xs={12}>
+                <FormControlLabel
+                  control={<Checkbox value="allowExtraEmails" color="primary" onClick={handleTogglePassword} />}
+                  label={!showPassword ? 'Hide Password' : 'Show Password'}
+                />
+              </Grid>
             </Grid>
             <Button
               type="submit"
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
+              onClick={signUpTrigger}
             >
               Sign Up
             </Button>
@@ -130,3 +182,5 @@ export default function SignUp() {
     </ThemeProvider>
   );
 }
+
+export default SignUp;
