@@ -12,24 +12,91 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { useState } from 'react';
-
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate for redirection
+import Cookies from 'js-cookie';
+import jwt from 'jsonwebtoken';
 const defaultTheme = createTheme();
-
-function SignIn() {
-  const [inputEmail, setInputEmail] = useState("");
-  const [inputPass, setInputPass] = useState("");
-  const [tickBox, setTickBox] = useState(false);
+function SignIn({ setIsAuthenticated, }: any) {
+  const navigate = useNavigate();
+  const [inputEmail, setInputEmail] = useState<string>('');
+  const [inputPass, setInputPass] = useState<string>('');
+  const [tickBox, setTickBox] = useState<boolean>(false);
+  
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      password: data.get('password'),
-    });
-    signInOnAction(); // Call the function here to clear the checkbox on form submission
+    signInOnAction();
   };
+
+  // // HOME VALIDATION
+  
+  // const cookieToken = Cookies.get('token');
+    
+  //   const verifyToken = async () => {
+  //     try {
+  //       const response = await fetch("http://localhost:5000/auth/verifytoken", {
+  //         method: 'POST',
+  //         headers: {
+  //           'Content-Type': 'application/json'
+  //         },
+  //         body: JSON.stringify({
+  //           token: cookieToken,
+  //         })
+  //       });
+
+  //       if (response.ok) {
+  //         setIsAuthenticated(true);
+  //         navigate("/home")
+  //         return;
+  //       } else {
+  //         console.log("Not Valid");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error verifying token:", error);
+  //     }
+  //   }
+
+  //   verifyToken();
+
+  //   // CLOSE HOME VALIDATION
+
+  async function signInOnAction() {
+    try {
+      const response = await fetch("http://localhost:5000/sign-in", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: inputEmail,
+          password: inputPass
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to sign in');
+      }
+
+      const data = await response.json();
+      const { isUsers, token } = data;
+      console.log("Is User " + isUsers);
+
+      if (isUsers) {
+        Cookies.set('token', token, { expires: 7, secure: true });
+        console.log(" Get Cookies Token  " + Cookies.get('token'))
+        setIsAuthenticated(true);
+        navigate('/home');
+      }
+
+    } catch (error) {
+      console.error('Error during sign-in:', error);
+    } finally {
+      setInputEmail("");
+      setInputPass("");
+      setTickBox(false);
+    }
+  }
 
   function Copyright(props: any) {
     return (
@@ -42,12 +109,6 @@ function SignIn() {
         {'.'}
       </Typography>
     );
-  }
-
-  function signInOnAction() {
-    setInputEmail("");
-    setInputPass("");
-    setTickBox(false); // Reset the checkbox
   }
 
   return (
@@ -118,7 +179,7 @@ function SignIn() {
                 </Link>
               </Grid>
               <Grid item>
-                <Link href="signup" variant="body2">
+                <Link href="/" variant="body2">
                   {"Don't have an account? Sign Up"}
                 </Link>
               </Grid>

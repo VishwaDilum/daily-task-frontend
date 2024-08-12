@@ -87,9 +87,19 @@ function forgotpassword() {
 
 
 
-    function resetPass() {
+    async function resetPass() {
         if (newInputPass01 === newInputPass02) {
             console.log("Password Matched")
+            const response = await fetch('http://localhost:5000/resetpass', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 
+                    email: emailValue,
+                    password : newInputPass01
+                })
+            });
             return;
         }
         console.log("Password Not Matched");
