@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -27,6 +27,22 @@ function Home() {
         phone: string;
         suggested?: boolean;
     }
+
+    const [data, setData] = useState<any[]>([]);
+    useEffect(() => {
+        const fetchTasks = async () => {
+            const task = await fetch("http://localhost:5000/task-all", {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            const data = await task.json();
+            setData(data)
+        }
+        fetchTasks();
+    }, [])
+    console.log(data)
 
     const test: readonly CountryType[] = [
         { code: 1, label: 'Priority 1', phone: '0703' },
@@ -192,36 +208,31 @@ function Home() {
                                 <table className="table">
                                     <thead>
                                         <tr>
-                                            <th scope="col">Key</th>
+                                            <th scope="col">Task ID</th>
                                             <th scope="col">Priority</th>
                                             <th scope="col">Category</th>
                                             <th scope="col">Description</th>
                                             <th scope="col">Date</th>
                                             <th scope="col">Status</th>
-                                            <th scope="col">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody className="table-group-divider">
-                                        {Array.from({ length: 25 }, (_, index) => (
-                                            <tr key={index}>
-                                                <th scope="row">{index + 1}</th>
-                                                <td>Mark</td>
-                                                <td>Otto</td>
-                                                <td>Wash Car and after going to the grocery and buy some foods </td>
-                                                <td>2024-07-22</td>
-                                                <td>Pending</td>
-                                                <div className="dropdown">
-                                                        <button className="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenu2" data-bs-toggle="dropdown" aria-expanded="false">
-                                                            Status
-                                                        </button>
-                                                        <ul className="dropdown-menu" aria-labelledby="dropdownMenu2">
-                                                            <li><button className="dropdown-item" type="button" id='pendingDropDown'>Pending</button></li>
-                                                            <li><button className="dropdown-item" type="button" id='onProjectDropDown' >On Project</button></li>
-                                                            <li><button className="dropdown-item" type="button" id='compltedDropDown' >Complted</button></li>
-                                                        </ul>
-                                                    </div>
+                                        {data.length > 0 ? (
+                                            data.map((task: any, index: number) => (
+                                                <tr key={task.Id}>
+                                                    <th scope="row">{task.Id}</th>
+                                                    <td>{task.Priority}</td>
+                                                    <td>{task.Category}</td>
+                                                    <td>{task.Description}</td>
+                                                     <td>{dayjs(task.date).format('YYYY-MM-DD')}</td>
+                                                    <td>{task.status}</td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={6}>No tasks found</td>
                                             </tr>
-                                        ))}
+                                        )}
                                     </tbody>
                                 </table>
                             </div>
