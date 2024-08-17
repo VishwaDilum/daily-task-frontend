@@ -19,11 +19,10 @@ import Button from '@mui/material/Button';
 import '../cascade/home.css';
 import 'bootstrap/dist/css/bootstrap.min.css'; // Ensure Bootstrap CSS is imported
 import 'bootstrap/dist/js/bootstrap.bundle.min'; // Ensure Bootstrap JS is imported
-import jwt from 'jsonwebtoken';
 import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode'
-import { useNavigate } from 'react-router-dom';
-
+import MenuItem from '@mui/material/MenuItem';
+import Select, { SelectChangeEvent } from '@mui/material/Select';
 
 function Home() {
     interface CountryType {
@@ -39,9 +38,21 @@ function Home() {
         exp?: number;
     }
 
-    const [data, setData] = useState<any[]>([]);
+
+    let user = null;
+
+
+
+
+    const [allTask, setAllTask] = useState<any[]>([]);
     const [credential, setCredential] = useState<DecodedToken>();
-    const [loader, setLoader] = useState<boolean>(false);
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
+    const [selectedpriority, setPriority] = useState<CountryType>(); // State to manage selected priority
+    const [selecteddescription, setDescription] = useState(null); // State to manage selected priority
+
+
+
     useEffect(() => {
         const fetchTasks = async () => {
 
@@ -60,23 +71,18 @@ function Home() {
                 })
             })
             const data = await task.json();
-            setData(data)
+            setAllTask(data)
         }
         fetchTasks();
 
     }, [])
-    console.log(data)
+    console.log(allTask)
 
     const test: readonly CountryType[] = [
         { code: 1, label: 'Priority 1', phone: '0703' },
         { code: 2, label: 'Priority 2', phone: '0703' },
         { code: 3, label: 'Priority 3', phone: '0703' }
     ];
-
-    const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
-    const handleDateChange = (newDate: Dayjs | null) => {
-        setSelectedDate(newDate);
-    };
 
     const dayOfWeekFormat = (date: any) => {
         return date.format('ddd').charAt(0).toUpperCase();
@@ -90,6 +96,53 @@ function Home() {
         Cookies.remove('token')
         window.location.reload();
     }
+
+    function addTask() {
+        console.log(selectedDate);
+        console.log(selectedCategory);
+        console.log(selecteddescription);
+        console.log(selectedpriority);
+
+        fetch('http://localhost:5000/add-task',
+            {
+                method : 'POST',
+                headers : {'Content-Type': 'application/json'}
+                ,body: JSON.stringify({
+                    email : credential?.email,
+                    date : selectedDate,
+                    category : selectedCategory,
+                    description : selecteddescription,
+                    priority :  selectedpriority?.code
+                })
+            }
+        )
+    }
+
+
+
+    const handleDateChange = (newDate: Dayjs | null) => {
+        setSelectedDate(newDate);
+        // console.log(selectedDate);
+    };
+    const categoryHandleChange = (event: any) => {
+        const value = event.target.value;
+        setSelectedCategory(value);
+        // console.log('Selected category:', selectedCategory); // Log the selected category
+    };
+    const descriptionHandleChange = (event: any) => {
+        const value = event.target.value;
+        setDescription(value);
+        // console.log('Selected description:', description); // Log the selected category
+    };
+
+    const priorityHandleChange = (event: any, newValue: any) => {
+        setPriority(newValue); // Update the state with selected value
+        if (newValue) {
+            // console.log('Selected priority:', priority); // Log selected priority to the console
+        }
+    };
+
+
 
     return (
 
@@ -120,7 +173,8 @@ function Home() {
                                 sx={{ width: 260 }}
                                 options={test}
                                 autoHighlight
-                                getOptionLabel={optionLabel}
+                                getOptionLabel={(option) => option.label}
+                                onChange={priorityHandleChange} // Handle option change
                                 renderOption={(props, option) => (
                                     <Box component="li" sx={{ '& > img': { mr: 2, flexShrink: 0 } }} {...props}>
                                         <img
@@ -139,7 +193,7 @@ function Home() {
                                         label="Select The Priority"
                                         inputProps={{
                                             ...params.inputProps,
-                                            autoComplete: 'new-password', // disable autocomplete and autofill
+                                            autoComplete: 'new-password', // Disable autocomplete and autofill
                                         }}
                                     />
                                 )}
@@ -159,6 +213,8 @@ function Home() {
                                             name: 'category',
                                             id: 'category-select',
                                         }}
+                                        onChange={categoryHandleChange} // Handle change event
+
                                     >
                                         <option value="Study">Study</option>
                                         <option value="Work">Work</option>
@@ -177,10 +233,11 @@ function Home() {
                                 noValidate
                                 autoComplete="off"
                             >
-                                <TextField id="standard-basic" label="Description" variant="standard" fullWidth />
+                                <TextField id="standard-basic" label="Description" variant="standard" fullWidth
+                                    onChange={descriptionHandleChange} />
                             </Box>
                         </div>
-                        <Button variant="contained" id='addTaskBtn'>Add Task</Button>
+                        <Button variant="contained" id='addTaskBtn' onClick={addTask} >Add Task</Button>
                     </div>
                     <div className='col-2'>
 
@@ -219,7 +276,7 @@ function Home() {
                             <button id='profileBtn'>
                                 <img src={Icon01} className="rounded-circle" alt="Profile Icon" />
                                 <div className='profile-container'>
-                                    <h1 id='userName' >Hey Dilum</h1>
+                                    <h1 id='userName' >Hey {credential?.validation}</h1>
                                     <h5 id='userEmail'>vishwadilum91@gmail.com</h5>
                                     <span></span>
                                     <button type="button" className="btn btn-outline-dark" onClick={logOut}> Log Out ):</button>
@@ -246,8 +303,8 @@ function Home() {
                                         </tr>
                                     </thead>
                                     <tbody className="table-group-divider">
-                                        {data.length > 0 ? (
-                                            data.map((task: any) => (
+                                        {allTask.length > 0 ? (
+                                            allTask.map((task: any) => (
                                                 <tr key={task.Id}>
                                                     <th scope="row">{task.Id}</th>
                                                     <td>{task.Priority}</td>
