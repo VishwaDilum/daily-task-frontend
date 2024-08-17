@@ -11,7 +11,7 @@ function forgotpassword() {
     const [isDisable, setDisable] = useState<boolean>(false);
     const [emailValue, setEmailValue] = useState<string>("");
     const [otpValue, setOtpValue] = useState<string>("");
-    const [newPass, setNewPass] = useState<boolean>(false);
+    const [newPass, setNewPass] = useState<boolean>(true);
     const [newInputPass01, setNewPass01] = useState<string>("");
     const [newInputPass02, setNewPass02] = useState<string>("");
     const [showPassword, setShowPassword] = useState(true);
@@ -44,7 +44,7 @@ function forgotpassword() {
     };
 
     function test() {
-        history('/signin');
+        history('/sign-in');
     }
 
     const confirmOtp = async () => {
