@@ -105,8 +105,26 @@
     background-color: rgb(108, 255, 255);
 }
 #onProjectDropDown:hover{
-    background-color: yellow;
+    background-color: #ddb502;
 }
 #compltedDropDown:hover{
     background-color:rgb(53, 153, 98);
+}
+#pending_task_title{
+    color: #ffe600fd;
+    background-color: black;
+    border-radius: 20%;
+    text-align: center;
+}
+#ongoing_task_title{
+    color: #36b6f1fd;
+    background-color: black;
+    border-radius: 20%;
+    text-align: center;
+}
+#complted_task_title{
+    color: #00fd37fd;
+    background-color: black;
+    border-radius: 20%;
+    text-align: center;
 }

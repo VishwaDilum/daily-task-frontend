@@ -23,7 +23,7 @@ import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode'
 import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
-import { Today } from '@mui/icons-material';
+import { Task, Today } from '@mui/icons-material';
 
 function Home() {
     interface CountryType {
@@ -61,6 +61,11 @@ function Home() {
 
     const [allTask, setAllTask] = useState<task[]>([]);
     const [todayTask, setTodayTask] = useState<task[]>([]);
+    const [ongoingTask, setOngoingTask] = useState<task[]>([]);
+    const [complteTask, setCompleteTask] = useState<task[]>([]);
+    
+
+
     const [credential, setCredential] = useState<DecodedToken>();
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
@@ -81,7 +86,7 @@ function Home() {
             console.log(user.email);
             setCredential(user);
 
-            const task = await fetch("http://localhost:5000/task-all", {
+            const task = await fetch("http://localhost:5000/pending-all-task", {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -100,10 +105,32 @@ function Home() {
                     targetDate: formattedDate
                 })
             })
+            const ongoing_task = await fetch("http://localhost:5000/ongoing-task", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }, body: JSON.stringify({
+                    targetEmail: user.email,
+                    targetDate: formattedDate
+                })
+            })
+            const completed_task = await fetch("http://localhost:5000/completed-task", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }, body: JSON.stringify({
+                    targetEmail: user.email,
+                    targetDate: formattedDate
+                })
+            })
             const data = await task.json();
             setAllTask(data)
             const todayData = await today_task.json();
             setTodayTask(todayData)
+            const allOngoinTask = await ongoing_task.json();
+            setOngoingTask(allOngoinTask)
+            const allCompleteTask = await completed_task.json();
+            setCompleteTask(allCompleteTask)
         }
         fetchTasks();
 
@@ -140,13 +167,13 @@ function Home() {
         window.location.reload();
     }
 
-    function addTask() {
+    async function addTask() {
         console.log(selectedDate);
         console.log(selectedCategory);
         console.log(selecteddescription);
         console.log(selectedpriority);
 
-        fetch('http://localhost:5000/add-task',
+         fetch('http://localhost:5000/add-task',
             {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
@@ -159,6 +186,7 @@ function Home() {
                 })
             }
         )
+        window.location.reload();
     }
 
 
@@ -190,15 +218,62 @@ function Home() {
         console.log(`Row with Task ID ${taskId} was clicked.`);
     };
 
-    const handleCompltedDropDown = (taskId: any) => {
+    const handleCompltedDropDown = (task: any) => {
         // You can now handle the row click event here
-        console.log(`Row with Task ID ${taskId} was cpomplte clicked.`);
+        console.log(`Row with Task ID ${task} was cpomplte clicked.`);
     };
 
-    const handleOnProjectDropDown = (taskId: any) => {
+    const handleOnProjectDropDown = (task: any) => {
+        console.log("Click ID "+task.id)
+        console.log("Click Date "+task.Date)
+        console.log("Click Email "+task.email)
+        console.log("Click Category "+task.Category)
+        console.log("Click Desdcription "+task.Description)
+        console.log("Click Priority "+task.Priority)
+
+        fetch("http://localhost:5000/update-ongoing-task",{
+            method : "POST",
+            headers: { 'Content-Type': 'application/json' }
+                , body: JSON.stringify({
+                    id : task.id,
+                    email: task.email,
+                    date: task.Date,
+                    category: task.Category,
+                    description: task.Description,
+                    priority: task.Priority
+                })
+            
+        })
         // You can now handle the row click event here
-        console.log(`Row with Task ID ${taskId} was on Going clicked.`);
+        console.log(`Row with Task ID ${task} was on Going clicked.`);
+        window.location.reload();
     };
+
+    const handleToCompleteTask =(task: any)=>{
+        console.log("Click ID "+task.id)
+        console.log("Click Date "+task.Date)
+        console.log("Click Email "+task.email)
+        console.log("Click Category "+task.Category)
+        console.log("Click Desdcription "+task.Description)
+        console.log("Click Priority "+task.Priority)
+
+        fetch("http://localhost:5000/update-complete-task",{
+            method : "POST",
+            headers: { 'Content-Type': 'application/json' }
+                , body: JSON.stringify({
+                    id : task.id,
+                    email: task.email,
+                    date: task.Date,
+                    category: task.Category,
+                    description: task.Description,
+                    priority: task.Priority
+                })
+            
+        })
+        // You can now handle the row click event here
+        console.log(`Row with Task ID ${task} was on Going clicked.`);
+        window.location.reload();
+    }
 
 
 
@@ -357,8 +432,10 @@ function Home() {
                     </div>
                 </div>
             </div>
+            
             <div className='second-container'>
                 <div className='container p-1 my-1 border'>
+                <h5 id='pending_task_title'>Pending Task</h5><br />
                     <div className='row'>
                         <div className='col-10'>
                             <div className='scrollable-table'>
@@ -377,11 +454,11 @@ function Home() {
                                         {allTask.length > 0 ? (
                                             allTask.map((task: any) => (
                                                 <tr
-                                                    key={task.Id}
+                                                    key={task.id}
                                                     data-id={task.Id}  // Add unique identifier
                                                     
                                                 >
-                                                    <th scope="row">{task.Id}</th>
+                                                    <th scope="row">{task.id}</th>
                                                     <td>{task.Priority}</td>
                                                     <td>{task.Category}</td>
                                                     <td>{task.Description}</td>
@@ -392,9 +469,7 @@ function Home() {
                                                                 Status
                                                             </button>
                                                             <ul className="dropdown-menu" aria-labelledby="dropdownMenu2">
-                                                                <li><button className="dropdown-item" type="button" id='pendingDropDown'>Pending</button></li>
-                                                                <li><button className="dropdown-item" type="button" id='onProjectDropDown' onClick={() => handleOnProjectDropDown(task.Id)} >On Project</button></li>
-                                                                <li><button className="dropdown-item" type="button" id='compltedDropDown'  onClick={() => handleCompltedDropDown(task.Id)} >Complted</button></li>
+                                                                <li><button className="dropdown-item" type="button" id='onProjectDropDown' onClick={() => handleOnProjectDropDown(task)} >On Project</button></li>
                                                             </ul>
                                                         </div>
                                                     </td>
@@ -409,9 +484,105 @@ function Home() {
                                 </table>
                             </div>
                         </div>
-                        <div className='col-2'>
-                            <button className='btn btn-outline-warning' id='workingBtn'>On Workinng</button>
-                            <button className='btn btn-outline-success' id='complteBtn'>Completed</button>
+                    </div>
+                </div>
+            </div>
+
+            <div className='second-container'>
+                <div className='container p-1 my-1 border'>
+                <h5 id='ongoing_task_title'>Ongoing Task</h5><br />
+                    <div className='row'>
+                        <div className='col-10'>
+                            <div className='scrollable-table'>
+                                <table className="table">
+                                    <thead >
+                                        <tr>
+                                            <th scope="col">Task ID</th>
+                                            <th scope="col">Priority</th>
+                                            <th scope="col">Category</th>
+                                            <th scope="col">Description</th>
+                                            <th scope="col">Date</th>
+                                            <th scope="col">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="table-group-divider">
+                                        {ongoingTask.length > 0 ? (
+                                            ongoingTask.map((task: any) => (
+                                                <tr
+                                                    key={task.id}
+                                                    data-id={task.Id}  // Add unique identifier
+                                                    
+                                                >
+                                                    <th scope="row">{task.id}</th>
+                                                    <td>{task.Priority}</td>
+                                                    <td>{task.Category}</td>
+                                                    <td>{task.Description}</td>
+                                                    <td>{dayjs(task.date).format('YYYY-MM-DD')}</td>
+                                                    <td>
+                                                        <div className="dropdown">
+                                                            <button className="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenu2" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                Status
+                                                            </button>
+                                                            <ul className="dropdown-menu" aria-labelledby="dropdownMenu2">
+                                                                <li><button className="dropdown-item" type="button" id='compltedDropDown' onClick={() => handleToCompleteTask(task)} >To Complete</button></li>
+                                                            </ul>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={6}>No tasks found</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className='second-container'>
+                <div className='container p-1 my-1 border'>
+                <h5 id='complted_task_title' >Completed Task</h5><br />
+                    <div className='row'>
+                        <div className='col-10'>
+                            <div className='scrollable-table'>
+                                <table className="table">
+                                    <thead >
+                                        <tr>
+                                            <th scope="col">Task ID</th>
+                                            <th scope="col">Priority</th>
+                                            <th scope="col">Category</th>
+                                            <th scope="col">Description</th>
+                                            <th scope="col">Date</th>
+                                            <th scope="col">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="table-group-divider">
+                                        {complteTask.length > 0 ? (
+                                            complteTask.map((task: any) => (
+                                                <tr
+                                                    key={task.id}
+                                                    data-id={task.Id}  // Add unique identifier
+                                                    
+                                                >
+                                                    <th scope="row">{task.id}</th>
+                                                    <td>{task.Priority}</td>
+                                                    <td>{task.Category}</td>
+                                                    <td>{task.Description}</td>
+                                                    <td>{dayjs(task.date).format('YYYY-MM-DD')}</td>
+                                                    <td>Completed</td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr>
+                                                <td colSpan={6}>No tasks found</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
