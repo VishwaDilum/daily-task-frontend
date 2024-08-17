@@ -15,7 +15,6 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate for redirection
 import Cookies from 'js-cookie';
-import jwt from 'jsonwebtoken';
 const defaultTheme = createTheme();
 function SignIn({ setIsAuthenticated, }: any) {
   const navigate = useNavigate();

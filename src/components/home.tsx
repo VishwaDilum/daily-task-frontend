@@ -19,6 +19,11 @@ import Button from '@mui/material/Button';
 import '../cascade/home.css';
 import 'bootstrap/dist/css/bootstrap.min.css'; // Ensure Bootstrap CSS is imported
 import 'bootstrap/dist/js/bootstrap.bundle.min'; // Ensure Bootstrap JS is imported
+import jwt from 'jsonwebtoken';
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode'
+import { useNavigate } from 'react-router-dom';
+
 
 function Home() {
     interface CountryType {
@@ -27,20 +32,38 @@ function Home() {
         phone: string;
         suggested?: boolean;
     }
+    interface DecodedToken {
+        email?: string;
+        validation?: boolean;
+        iat?: number;
+        exp?: number;
+    }
 
     const [data, setData] = useState<any[]>([]);
+    const [credential, setCredential] = useState<DecodedToken>();
+    const [loader, setLoader] = useState<boolean>(false);
     useEffect(() => {
         const fetchTasks = async () => {
+
+            // JWT DECODE
+            const token = Cookies.get('token');
+            const user: DecodedToken = jwtDecode(`${token}`); // decode your token here
+            console.log(user.email);
+            setCredential(user);
+
             const task = await fetch("http://localhost:5000/task-all", {
-                method: 'GET',
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
-                }
+                }, body: JSON.stringify({
+                    targetEmail: user.email,
+                })
             })
             const data = await task.json();
             setData(data)
         }
         fetchTasks();
+
     }, [])
     console.log(data)
 
@@ -61,6 +84,12 @@ function Home() {
 
     const icons = [Icon01, Icon02, Icon03];
     const optionLabel = (option: any) => option.code;
+
+    function logOut() {
+
+        Cookies.remove('token')
+        window.location.reload();
+    }
 
     return (
 
@@ -193,7 +222,7 @@ function Home() {
                                     <h1 id='userName' >Hey Dilum</h1>
                                     <h5 id='userEmail'>vishwadilum91@gmail.com</h5>
                                     <span></span>
-                                    <button type="button" className="btn btn-outline-dark">Log Out ):</button>
+                                    <button type="button" className="btn btn-outline-dark" onClick={logOut}> Log Out ):</button>
                                 </div>
                             </button>
                         </div>
@@ -218,13 +247,13 @@ function Home() {
                                     </thead>
                                     <tbody className="table-group-divider">
                                         {data.length > 0 ? (
-                                            data.map((task: any, index: number) => (
+                                            data.map((task: any) => (
                                                 <tr key={task.Id}>
                                                     <th scope="row">{task.Id}</th>
                                                     <td>{task.Priority}</td>
                                                     <td>{task.Category}</td>
                                                     <td>{task.Description}</td>
-                                                     <td>{dayjs(task.date).format('YYYY-MM-DD')}</td>
+                                                    <td>{dayjs(task.date).format('YYYY-MM-DD')}</td>
                                                     <td>{task.status}</td>
                                                 </tr>
                                             ))
