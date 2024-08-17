@@ -23,6 +23,7 @@ import Cookies from 'js-cookie';
 import { jwtDecode } from 'jwt-decode'
 import MenuItem from '@mui/material/MenuItem';
 import Select, { SelectChangeEvent } from '@mui/material/Select';
+import { Today } from '@mui/icons-material';
 
 function Home() {
     interface CountryType {
@@ -39,12 +40,27 @@ function Home() {
     }
 
 
-    let user = null;
 
 
+    interface task {
+        date?: Date;
+        id?: string;
+        priority?: string;
+        category?: string;
+        description?: string;
+        status?: string;
+    }
+
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth(); // Months are zero-indexed
+    const day = today.getDate();
+
+    const formattedDate = new Date()
 
 
-    const [allTask, setAllTask] = useState<any[]>([]);
+    const [allTask, setAllTask] = useState<task[]>([]);
+    const [todayTask, setTodayTask] = useState<task[]>([]);
     const [credential, setCredential] = useState<DecodedToken>();
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedDate, setSelectedDate] = useState<Dayjs | null>(dayjs());
@@ -52,9 +68,12 @@ function Home() {
     const [selecteddescription, setDescription] = useState(null); // State to manage selected priority
 
 
-
+    const Today = new Date();
+    Today.setHours(0, 0, 0, 0)
     useEffect(() => {
         const fetchTasks = async () => {
+
+            console.log("Where is the day of Today " + formattedDate);
 
             // JWT DECODE
             const token = Cookies.get('token');
@@ -69,11 +88,35 @@ function Home() {
                 }, body: JSON.stringify({
                     targetEmail: user.email,
                 })
+
+            })
+
+            const today_task = await fetch("http://localhost:5000/today-task", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }, body: JSON.stringify({
+                    targetEmail: user.email,
+                    targetDate: formattedDate
+                })
             })
             const data = await task.json();
             setAllTask(data)
+            const todayData = await today_task.json();
+            setTodayTask(todayData)
         }
         fetchTasks();
+
+        let xr = allTask.filter((a) => {
+            const sqas = a.date;
+            //  const stgwu = new Date(sqas);
+
+        });
+
+        const dateString = "2024-12-01T00:00:00.000Z";
+        const dateObject = new Date(dateString);
+
+        console.log("Convert Date   " + dateObject);
 
     }, [])
     console.log(allTask)
@@ -105,14 +148,14 @@ function Home() {
 
         fetch('http://localhost:5000/add-task',
             {
-                method : 'POST',
-                headers : {'Content-Type': 'application/json'}
-                ,body: JSON.stringify({
-                    email : credential?.email,
-                    date : selectedDate,
-                    category : selectedCategory,
-                    description : selecteddescription,
-                    priority :  selectedpriority?.code
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+                , body: JSON.stringify({
+                    email: credential?.email,
+                    date: selectedDate,
+                    category: selectedCategory,
+                    description: selecteddescription,
+                    priority: selectedpriority?.code
                 })
             }
         )
@@ -140,6 +183,21 @@ function Home() {
         if (newValue) {
             // console.log('Selected priority:', priority); // Log selected priority to the console
         }
+    };
+
+    const handleRowClick = (taskId: any) => {
+        // You can now handle the row click event here
+        console.log(`Row with Task ID ${taskId} was clicked.`);
+    };
+
+    const handleCompltedDropDown = (taskId: any) => {
+        // You can now handle the row click event here
+        console.log(`Row with Task ID ${taskId} was cpomplte clicked.`);
+    };
+
+    const handleOnProjectDropDown = (taskId: any) => {
+        // You can now handle the row click event here
+        console.log(`Row with Task ID ${taskId} was on Going clicked.`);
     };
 
 
@@ -249,27 +307,40 @@ function Home() {
                             <table className="table">
                                 <thead>
                                     <tr>
-                                        <th scope="col">Key</th>
+                                        <th scope="col">Task ID</th>
                                         <th scope="col">Priority</th>
                                         <th scope="col">Category</th>
                                         <th scope="col">Description</th>
+                                        <th scope="col">Date</th>
                                         <th scope="col">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="table-group-divider">
-                                    {Array.from({ length: 25 }, (_, index) => (
-                                        <tr key={index}>
-                                            <th scope="row">{index + 1}</th>
-                                            <td>Mark</td>
-                                            <td>Otto</td>
-                                            <td>Wash Car and after going to the grocery and buy some foods </td>
-                                            <td>Pending</td>
+                                    {todayTask.length > 0 ? (
+                                        todayTask.map((task: any) => (
+                                            <tr
+                                                key={task.Id}
+                                                data-id={task.Id}  // Add unique identifier
+                                                onClick={() => handleRowClick(task.Id)} // Add click handler
+                                            >
+                                                <th scope="row">{task.Id}</th>
+                                                <td>{task.Priority}</td>
+                                                <td>{task.Category}</td>
+                                                <td>{task.Description}</td>
+                                                <td>{dayjs(task.date).format('YYYY-MM-DD')}</td>
+                                                <td>{task.status}</td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={6}>No tasks found</td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
                     </div>
+
 
                     <div className="col-1">
                         <div className='profileIcon'>
@@ -292,7 +363,7 @@ function Home() {
                         <div className='col-10'>
                             <div className='scrollable-table'>
                                 <table className="table">
-                                    <thead>
+                                    <thead >
                                         <tr>
                                             <th scope="col">Task ID</th>
                                             <th scope="col">Priority</th>
@@ -305,13 +376,28 @@ function Home() {
                                     <tbody className="table-group-divider">
                                         {allTask.length > 0 ? (
                                             allTask.map((task: any) => (
-                                                <tr key={task.Id}>
+                                                <tr
+                                                    key={task.Id}
+                                                    data-id={task.Id}  // Add unique identifier
+                                                    
+                                                >
                                                     <th scope="row">{task.Id}</th>
                                                     <td>{task.Priority}</td>
                                                     <td>{task.Category}</td>
                                                     <td>{task.Description}</td>
                                                     <td>{dayjs(task.date).format('YYYY-MM-DD')}</td>
-                                                    <td>{task.status}</td>
+                                                    <td>
+                                                        <div className="dropdown">
+                                                            <button className="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenu2" data-bs-toggle="dropdown" aria-expanded="false">
+                                                                Status
+                                                            </button>
+                                                            <ul className="dropdown-menu" aria-labelledby="dropdownMenu2">
+                                                                <li><button className="dropdown-item" type="button" id='pendingDropDown'>Pending</button></li>
+                                                                <li><button className="dropdown-item" type="button" id='onProjectDropDown' onClick={() => handleOnProjectDropDown(task.Id)} >On Project</button></li>
+                                                                <li><button className="dropdown-item" type="button" id='compltedDropDown'  onClick={() => handleCompltedDropDown(task.Id)} >Complted</button></li>
+                                                            </ul>
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                             ))
                                         ) : (
